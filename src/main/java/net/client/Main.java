@@ -1,4 +1,4 @@
-package client;
+package net.client;
 
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -7,9 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class Main {
-    public static final Charset SOCKET_CHARSET = Charset.forName("cp866");
     public static final String LOCALHOST = "localhost";
     public static final int PORT = 8989;
+    public static final Charset SOCKET_CHARSET = Charset.forName("cp866");
 
     public static void main(String[] args) throws Exception {
         try (Socket socket = new Socket(LOCALHOST, PORT);

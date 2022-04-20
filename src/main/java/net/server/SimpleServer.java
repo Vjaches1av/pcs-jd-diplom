@@ -1,25 +1,25 @@
-package server;
+package net.server;
 
 import com.google.gson.Gson;
-import searchEngine.BooleanSearchEngine;
+import searchEngine.PageEntry;
+import searchEngine.SearchEngine;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Scanner;
 
 public class SimpleServer {
-    private static final Charset SOCKET_CHARSET = Charset.forName("cp866");
-    private static final File DIR = new File("pdfs");
     public static final int PORT = 8989;
+    public static final Charset SOCKET_CHARSET = Charset.forName("cp866");
 
-    private final BooleanSearchEngine engine;
+    private final SearchEngine engine;
 
-    public SimpleServer() {
-        this.engine = new BooleanSearchEngine(DIR);
+    public SimpleServer(SearchEngine engine) {
+        this.engine = engine;
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("Сервер успешно запущен!");
@@ -32,7 +32,12 @@ public class SimpleServer {
                     try (Scanner incomingMessage = new Scanner(socket.getInputStream(), SOCKET_CHARSET);
                          PrintWriter outgoingMessage = new PrintWriter(socket.getOutputStream(), true, SOCKET_CHARSET)) {
                         outgoingMessage.println("Пожалуйста, введите ниже слово для поиска: ");
-                        outgoingMessage.println(toJson(incomingMessage.nextLine().strip()));
+                        List<PageEntry> pageEntryList = engine.search(incomingMessage.nextLine().strip());
+                        if (pageEntryList == null || pageEntryList.isEmpty()) {
+                            outgoingMessage.println("По вашему запросу ничего не найдено");
+                        } else {
+                            outgoingMessage.println(toJson(pageEntryList));
+                        }
                         outgoingMessage.println("Завершение сеанса");
                     }
                 } catch (IOException e) {
@@ -44,11 +49,8 @@ public class SimpleServer {
         }
     }
 
-    private String toJson(String word) {
-        return new Gson().toJson(engine.search(word));
-    }
 
-    public static void main(String[] args) {
-        new SimpleServer();
+    private String toJson(List<PageEntry> pageEntryList) {
+        return new Gson().toJson(pageEntryList);
     }
 }
