@@ -13,6 +13,33 @@ import java.util.*;
 public class BooleanSearchEngine implements SearchEngine {
     private final Map<String, List<PageEntry>> map = new HashMap<>();
 
+    public BooleanSearchEngine(File pdfsDir) {
+        if (pdfsDir != null && pdfsDir.exists() && pdfsDir.isDirectory()) {
+            for (File pdfFile : searchPdfs(pdfsDir)) {
+                analyzePdfFile(pdfFile);
+            }
+        } else {
+            throw new IllegalArgumentException("Указанная папка не существует или недоступна");
+        }
+    }
+
+    private @NotNull List<File> searchPdfs(@NotNull File pathname) {
+        List<File> listPdfs = new ArrayList<>();
+
+        File[] files = pathname.listFiles();
+        if (files != null && files.length != 0) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    listPdfs.addAll(searchPdfs(file));
+                } else if (file.getName().endsWith(".pdf")) {
+                    listPdfs.add(file);
+                }
+            }
+        }
+
+        return listPdfs;
+    }
+
     private @NotNull Map<String, Integer> countNumberWords(@NotNull String pdfPage) {
         String[] words = pdfPage.split("\\P{IsAlphabetic}+");
 
@@ -37,33 +64,6 @@ public class BooleanSearchEngine implements SearchEngine {
             }
         } catch (IOException e) {
             System.err.println("Файл \"" + pdfFile.getName() + "\" не найден или недоступен для чтения");
-        }
-    }
-
-    private @NotNull List<File> searchPdfs(@NotNull File pathname) {
-        List<File> listPdfs = new ArrayList<>();
-
-        File[] files = pathname.listFiles();
-        if (files != null && files.length != 0) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    listPdfs.addAll(searchPdfs(file));
-                } else if (file.getName().endsWith(".pdf")) {
-                    listPdfs.add(file);
-                }
-            }
-        }
-
-        return listPdfs;
-    }
-
-    public BooleanSearchEngine(File pdfsDir) {
-        if (pdfsDir != null && pdfsDir.exists() && pdfsDir.isDirectory()) {
-            for (File pdfFile : searchPdfs(pdfsDir)) {
-                analyzePdfFile(pdfFile);
-            }
-        } else {
-            throw new IllegalArgumentException("Указанная папка не существует или недоступна");
         }
     }
 
